@@ -42,17 +42,19 @@ bool AIEAiProject::onCreate(int a_argc, char* a_argv[])
 	AIPlayer1.Init();
 
 	AIPlayer2.Init();
-	Node1.position = glm::vec3(10, 0, 0);
-	Node2.position = glm::vec3(-10, 0, 0);
-	Node3.position = glm::vec3(0, 0, 10);
-	Node4.position = glm::vec3(0, 0, -10);
+	Node1.Init(glm::vec3(10, 0, 0));
+	Node2.Init(glm::vec3(-10, 0, 0));
+	Node3.Init(glm::vec3(0, 0, 10));
+	Node4.Init(glm::vec3(0, 0, -10));
+	playerMine.Init(glm::vec3(-30, 0, 0));
 
-	AIPlayer1.currentNode = Node1;
+	AIPlayer1.currentNode = &Node1;
 	AIPlayer1.nodeList[0] = &Node1;
 	AIPlayer1.nodeList[1] = &Node2;
 	AIPlayer1.nodeList[2] = &Node3;
 	AIPlayer1.nodeList[3] = &Node4;
 
+	AIPlayer1.homeMine = &playerMine;
 	AIPlayer2.target = &AIPlayer1;
 
 	return true;
@@ -82,14 +84,11 @@ void AIEAiProject::onUpdate(float a_deltaTime)
 	AIPlayer1.Update(a_deltaTime);
 	AIPlayer2.Update(a_deltaTime);
 
-	if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS)
-		AIPlayer1.MoveToNextNode(&Node1);
-	if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS)
-		AIPlayer1.MoveToNextNode(&Node2);
-	if (glfwGetKey(m_window, GLFW_KEY_3) == GLFW_PRESS)
-		AIPlayer1.MoveToNextNode(&Node3);
-	if (glfwGetKey(m_window, GLFW_KEY_4) == GLFW_PRESS)
-		AIPlayer1.MoveToNextNode(&Node4);
+	Node1.Update();
+	Node2.Update();
+	Node3.Update();
+	Node4.Update();
+	playerMine.Update();
 
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)

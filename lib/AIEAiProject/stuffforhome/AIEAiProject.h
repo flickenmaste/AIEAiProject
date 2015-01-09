@@ -35,4 +35,6 @@ protected:
 	Node Node3;
 	Node Node4;
 
+	Node playerMine;
+
 };
