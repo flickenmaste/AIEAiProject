@@ -39,15 +39,21 @@ bool AIEAiProject::onCreate(int a_argc, char* a_argv[])
 	glEnable(GL_CULL_FACE);
 
 	// Custom code
-	m_customMatrix = glm::mat4();
-	AIPlayer1.position = glm::vec3(0, 0, 0);
-	AIPlayer1.reachedDestination = false;
+	AIPlayer1.Init();
+
+	AIPlayer2.Init();
 	Node1.position = glm::vec3(10, 0, 0);
 	Node2.position = glm::vec3(-10, 0, 0);
 	Node3.position = glm::vec3(0, 0, 10);
 	Node4.position = glm::vec3(0, 0, -10);
 
 	AIPlayer1.currentNode = Node1;
+	AIPlayer1.nodeList[0] = &Node1;
+	AIPlayer1.nodeList[1] = &Node2;
+	AIPlayer1.nodeList[2] = &Node3;
+	AIPlayer1.nodeList[3] = &Node4;
+
+	AIPlayer2.target = &AIPlayer1;
 
 	return true;
 }
@@ -73,13 +79,8 @@ void AIEAiProject::onUpdate(float a_deltaTime)
 			i == 10 ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 0, 0, 1));
 	}
 
-	CheckAgentMovement();
-
-	if (!AIPlayer1.reachedDestination)
-		AIPlayer1.position += glm::lerp(AIPlayer1.position, AIPlayer1.currentNode.position, 0.5f) * a_deltaTime;
-
-	// Custom code
-	Gizmos::addSphere(AIPlayer1.position, 1.0f, 10, 10, glm::vec4(1, 1, 1, 1), &m_customMatrix);
+	AIPlayer1.Update(a_deltaTime);
+	AIPlayer2.Update(a_deltaTime);
 
 	if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS)
 		AIPlayer1.MoveToNextNode(&Node1);
@@ -131,10 +132,4 @@ int main(int argc, char* argv[])
 	delete app;
 
 	return 0;
-}
-
-void AIEAiProject::CheckAgentMovement()
-{
-	if (!AIPlayer1.reachedDestination)
-		AIPlayer1.CheckIfReached(AIPlayer1.position, AIPlayer1.currentNode);
 }

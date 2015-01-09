@@ -21,7 +21,6 @@ protected:
 	virtual void onDraw();
 	virtual void onDestroy();
 
-	void CheckAgentMovement();
 	void MoveAgent();
 
 	glm::mat4	m_cameraMatrix;
@@ -29,7 +28,7 @@ protected:
 	glm::mat4	m_customMatrix;
 
 	Agent AIPlayer1;
-	Agent AIPlayer2;
+	fAgent AIPlayer2;
 
 	Node Node1;
 	Node Node2;
