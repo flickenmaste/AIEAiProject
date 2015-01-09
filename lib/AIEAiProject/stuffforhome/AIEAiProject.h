@@ -21,6 +21,9 @@ protected:
 	virtual void onDraw();
 	virtual void onDestroy();
 
+	void CheckAgentMovement();
+	void MoveAgent();
+
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;
 	glm::mat4	m_customMatrix;
