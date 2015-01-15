@@ -23,6 +23,8 @@ public:
 	bool hasMined;
 	Node *homeMine;
 	bool hasTarget;
+	bool isFleeing;
+	glm::vec3 enemyPos;
 
 	void Init()
 	{
@@ -32,6 +34,7 @@ public:
 		reachedDestination = false;
 		hasTarget = false;
 		hasMined = false;
+		isFleeing = false;
 		srand(time(NULL));
 	}
 
@@ -126,6 +129,12 @@ public:
 
 		if (hasMined)
 			position = position + dir * speed * a_deltaTime;
+
+		if (isFleeing)
+		{
+			glm::vec3 dir2 = glm::normalize(enemyPos - position);
+			position = position - dir2 * speed * a_deltaTime;
+		}
 	}
 
 	void CheckAgentMovement()
@@ -144,7 +153,7 @@ class fAgent
 {
 public:
 	glm::vec3 position;
-	float speed;
+	float mySpeed;
 	glm::mat4 m_customMatrix;
 	glm::mat4 m_customMatrix2;
 	glm::mat4 m_customMatrix3;
@@ -166,7 +175,7 @@ public:
 	{
 		m_customMatrix = glm::mat4();
 		position = glm::vec3(20, 0, 0);
-		speed = 5.0f;
+		mySpeed = 5.0f;
 		isHungry = false;
 		hunger = 100.0f;
 		home = glm::vec3(20, 0, 10);
@@ -179,12 +188,14 @@ public:
 	{
 		CheckHunger();
 		CheckIfReached();
+		CheckIfClose();
 		CheckIfReachedHome();
 		Starve(a_deltaTime);
 		Move(a_deltaTime);
 		Gizmos::addSphere(position, 1.0f, 10, 10, glm::vec4(250, 0, 0, 1), &m_customMatrix);
 		Gizmos::addSphere(home, homeSize, 10, 10, glm::vec4(0, 250, 0, 1), &m_customMatrix2);
 		Gizmos::addSphere(homeMine, homeMineSize, 10, 10, glm::vec4(255, 200, 0, 1), &m_customMatrix3);
+		target->enemyPos = position;
 	}
 
 	void CheckIfReached()
@@ -193,13 +204,12 @@ public:
 		float range2 = (3.0f * 3.0f);
 		float distance = glm::distance2(position, target->position);
 		if (distance <= range2)
-			speed = 2.5f;
+			mySpeed = 4.0f;
 		else
-			speed = 5.0f;
+			mySpeed = 5.0f;
 		if (distance <= range)
 		{
 			closeToTarget = true;
-			target->gotTouched = true;
 			if (target->hasMined)
 			{
 				target->hasMined = false;
@@ -208,6 +218,20 @@ public:
 			return;
 		}
 		closeToTarget = false;
+	}
+
+	void CheckIfClose()
+	{
+		float range = (8.0f * 8.0f);
+		float distance = glm::distance2(position, target->position);
+		if (distance <= range)
+		{
+			target->isFleeing = true;
+		}
+		else
+		{
+			target->isFleeing = false;
+		}
 	}
 	
 	void CheckIfReachedHome()
@@ -251,21 +275,21 @@ public:
 		if (!closeToTarget && isHungry)
 		{
 			glm::vec3 dir = glm::normalize(target->position - position);
-			position = position + dir * speed * a_deltaTime;
+			position = position + dir * mySpeed * a_deltaTime;
 		}
 
 		if (!isHungry && !hasStolen)
 		{
-			speed = 5.0f;
+			mySpeed = 5.0f;
 			glm::vec3 dir = glm::normalize(home - position);
-			position = position + dir * speed * a_deltaTime;
+			position = position + dir * mySpeed * a_deltaTime;
 		}
 
 		if (hasStolen)
 		{
-			speed = 5.0f;
+			mySpeed = 5.0f;
 			glm::vec3 dir = glm::normalize(homeMine - position);
-			position = position + dir * speed * a_deltaTime;
+			position = position + dir * mySpeed * a_deltaTime;
 		}
 	}
 };
