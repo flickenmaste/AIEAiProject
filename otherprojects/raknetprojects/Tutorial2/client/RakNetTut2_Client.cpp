@@ -211,7 +211,14 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 			{
 				if (explode.first != m_myID)
 				{
-					m_players[explode.first] = glm::vec3(0, 0, 0);
+					float range = (6.0f * 6.0f);
+					float distance = glm::distance2(m_players[m_myID], m_players[explode.first]);
+					if (distance <= range)
+					{
+						m_players[explode.first] = glm::vec3(0, 0, 0);
+					}
+					
+					//m_players[explode.first] = glm::vec3(0, 0, 0);
 
 					// Sending player movement
 					RakNet::BitStream output;
