@@ -14,7 +14,8 @@ enum MESSAGE_ID
 	ID_USER_CLIENT_DISCONNECTED,
 	ID_USER_ID,
 
-	ID_USER_CUSTOM_DATA
+	ID_USER_CUSTOM_DATA,
+	ID_USER_CUSTOM_DATA_TWO,
 };
 
 #define SERVER_PORT 12001
@@ -91,6 +92,12 @@ int main(int argc, char* argv[])
 								   RakNet::BitStream outStream(packet->data, packet->length, false);
 								   raknet->Send(&outStream, MEDIUM_PRIORITY, UNRELIABLE, 0, packet->systemAddress, true);
 							   }
+						   }
+
+						   if (packet->data[0] >= ID_USER_CUSTOM_DATA_TWO)
+						   {
+							   RakNet::BitStream outStream(packet->data, packet->length, false);
+							   raknet->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 						   }
 				}
 				break;

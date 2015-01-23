@@ -19,8 +19,11 @@ enum MESSAGE_ID
 	ID_USER_ID,
 
 	ID_USER_CUSTOM_DATA,
+	ID_USER_CUSTOM_DATA_TWO,
 
 	ID_USER_POSITION = ID_USER_CUSTOM_DATA,
+
+	ID_USER_BULLET = ID_USER_CUSTOM_DATA_TWO,
 };
 
 #define SERVER_PORT 12001
@@ -108,6 +111,7 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 
 							   input.Read(m_myID);
 							   m_players[m_myID] = glm::vec3(0);
+							   m_playerBullets[m_myID] = glm::vec3(0);
 
 							   printf("My ID: %i\n", m_myID);
 
@@ -115,6 +119,7 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 							   while (input.Read(id))
 							   {
 								   m_players[id] = glm::vec3(0);
+								   m_playerBullets[id] = glm::vec3(0);
 							   }
 							   break;
 			}
@@ -126,6 +131,7 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 									   input.Read(id);
 									   printf("New player connected: %i\n", id);
 									   m_players[id] = glm::vec3(0);
+									   m_playerBullets[id] = glm::vec3(0);
 									   break;
 			}
 			case ID_USER_CLIENT_DISCONNECTED:
@@ -137,6 +143,7 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 												printf("Player disconnected: %i\n", id);
 
 												m_players.erase(m_players.find(id));
+												m_playerBullets.erase(m_playerBullets.find(id));
 												break;
 			}
 			case ID_USER_POSITION:
@@ -153,6 +160,22 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 
 									 break;
 			}
+			case ID_USER_BULLET:
+			{
+								   // Handle sending player data
+								   RakNet::BitStream input(packet->data, packet->length, true);
+								   input.IgnoreBytes(1);
+								   int id = -1;
+								   input.Read(id);
+								   glm::vec3 pos(0);
+								   input.Read(pos);
+
+								   printf("Player died: %i\n", id);
+
+								   m_players[id] = pos;
+
+								   break;
+			}
 		};
 
 		//get next
@@ -163,15 +186,11 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 	// Do player movement
 	if (m_myID != -1)
 	{
-		glm::vec3 movement(0);
-		if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-			movement.x -= 1;
-		if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-			movement.x += 1;
-		if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-			movement.z -= 1;
-		if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-			movement.z += 1;
+		glm::vec3 movement = myPlayer.MovePlayer(m_window);
+
+		//int choice = myBullet.CheckMovement(m_window, &m_playerBullets[m_myID], &m_players[m_myID]);
+		//glm::vec3 currPos = m_players[m_myID];
+		//glm::vec3 bulletMovement = myBullet.MoveBullet(choice, currPos);
 		
 		if (glm::length2(movement) > 0)
 		{
@@ -185,11 +204,46 @@ void RakNetTut2_Client::onUpdate(float a_deltaTime)
 
 			m_raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_serverAddress, false);
 		}
+
+		if (myPlayer.CheckSpace(m_window))
+		{
+			for (auto& explode : m_players)
+			{
+				if (explode.first != m_myID)
+				{
+					m_players[explode.first] = glm::vec3(0, 0, 0);
+
+					// Sending player movement
+					RakNet::BitStream output;
+					output.Write((unsigned char)ID_USER_BULLET);
+					output.Write(explode.first);
+					output.Write(m_players[explode.first]);
+
+					m_raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_serverAddress, false);
+				}
+			}
+		}
+
+		//if (glm::length2(bulletMovement) > 0)
+		//{
+		//	m_playerBullets[m_myID] = m_playerBullets[m_myID] + glm::normalize(bulletMovement) * a_deltaTime * 5.0f;
+
+		//	// Sending player movement
+		//	RakNet::BitStream output;
+		//	output.Write((unsigned char)ID_USER_BULLET);
+		//	output.Write(m_myID);
+		//	output.Write(m_playerBullets[m_myID]);
+
+		//	m_raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_serverAddress, false);
+		//}
 	}
 
 	// Draw all players
 	for (auto& player : m_players)
 		Gizmos::addAABBFilled(player.second, glm::vec3(0.5f), glm::vec4(1, 1, 0, 1));
+
+	//for (auto& bullet : m_playerBullets)
+		//Gizmos::addAABBFilled(bullet.second, glm::vec3(0.1f), glm::vec4(250, 0, 0, 1));
 
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)

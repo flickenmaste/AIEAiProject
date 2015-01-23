@@ -5,6 +5,8 @@
 
 #include "RakPeerInterface.h"
 #include <map>
+#include "Player.h"
+#include "Bullet.h"
 
 // derived application class that wraps up all globals neatly
 class RakNetTut2_Client : public Application
@@ -31,4 +33,8 @@ protected:
 	// self id and container for all other players on server
 	int m_myID;
 	std::map<int, glm::vec3> m_players;
+	std::map<int, glm::vec3> m_playerBullets;
+
+	Player myPlayer;
+	Bullet myBullet;
 };
